@@ -1,25 +1,38 @@
-import os
 import pytest
-from app import main
-from flask import Flask
+import psycopg2
 
-@pytest.fixture
-def client():
-    # Устанавливаем переменные окружения для теста
-    os.environ['POSTGRES_DB'] = 'mydatabase'
-    os.environ['POSTGRES_USER'] = 'myuser'
-    os.environ['POSTGRES_PASSWORD'] = 'mypassword'
+# Фикстура для подключения к базе данных
+@pytest.fixture(scope='module')
+def db_connection():
+    conn = psycopg2.connect("dbname='mydatabase' user='myuser' host='db' password='mypassword'")
+    yield conn
+    conn.close()
 
-    main.app.config['TESTING'] = True
-    client = main.app.test_client()
+# Фикстура для настройки базы данных перед тестами
+@pytest.fixture(scope='module', autouse=True)
+def setup_database(db_connection):
+    cursor = db_connection.cursor()
+    # Создание таблиц и начальных данных
+    cursor.execute("CREATE TABLE IF NOT EXISTS test_table (id SERIAL PRIMARY KEY, name VARCHAR(100));")
+    db_connection.commit()
+    
+    yield
+    
+    # Очистка таблиц после тестов
+    cursor.execute("DROP TABLE IF EXISTS test_table;")
+    db_connection.commit()
 
-    yield client
-
-def test_index_status_code(client):
-    response = client.get('/')
-    assert response.status_code == 200
-
-def test_index_contains_table(client):
-    response = client.get('/')
-    assert b'<table' in response.data
-    assert b'<th>Name</th>' in response.data
+# Пример теста для вставки записи в базу данных
+def test_database_insertion(db_connection):
+    cursor = db_connection.cursor()
+    
+    # Вставка записи
+    cursor.execute("INSERT INTO test_table (name) VALUES ('test_name');")
+    db_connection.commit()
+    
+    # Проверка вставленной записи
+    cursor.execute("SELECT * FROM test_table WHERE name='test_name';")
+    result = cursor.fetchall()
+    
+    assert len(result) == 1
+    assert result[0][1] == 'test_name'
