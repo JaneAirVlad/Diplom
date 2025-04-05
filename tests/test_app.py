@@ -1,6 +1,6 @@
 import os
 import pytest
-import main
+from app import main
 from flask import Flask
 
 @pytest.fixture
