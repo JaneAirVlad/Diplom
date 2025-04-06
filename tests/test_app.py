@@ -2,6 +2,7 @@ import subprocess
 import requests
 import pytest
 import time
+import psycopg2
 
 # Тест 1: Проверка корректности кода в main.py
 def test_main_code():
@@ -27,6 +28,50 @@ def test_docker_containers():
         assert 'nginx' in result.stdout, "Контейнер nginx не запущен"
     except subprocess.CalledProcessError as e:
         pytest.fail(f"Ошибка при получении списка контейнеров: {e}")
+
+# Тест 3: Проверка доступности базы данных
+def test_database_connection():
+    try:
+        conn = psycopg2.connect(
+            dbname='your_db_name',  # Замените на имя вашей базы данных
+            user='your_user',       # Замените на имя пользователя вашей базы данных
+            password='your_password',# Замените на пароль вашей базы данных
+            host='db'               # Замените на адрес вашего сервера базы данных (например, 'db' для Docker)
+        )
+        conn.close()
+    except Exception as e:
+        pytest.fail(f"Не удалось подключиться к базе данных: {e}")
+
+# Тест 4: Проверка проксирования запросов через Nginx
+def test_nginx_proxy():
+    url = 'http://localhost'  # Замените на нужный URL вашего Nginx (например, http://localhost)
+    try:
+        response = requests.get(url)
+        assert response.status_code == 200, f"Nginx не проксирует запросы. Код ответа: {response.status_code}"
+    except requests.ConnectionError:
+        pytest.fail("Не удалось подключиться к серверу Nginx")
+
+# Тест 5: Проверка наличия пользователей в базе данных
+def test_users_in_database():
+    try:
+        conn = psycopg2.connect(
+            dbname='your_db_name',  # Замените на имя вашей базы данных
+            user='your_user',       # Замените на имя пользователя вашей базы данных
+            password='your_password',# Замените на пароль вашей базы данных
+            host='db'               # Замените на адрес вашего сервера базы данных (например, 'db' для Docker)
+        )
+        
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM users')
+        users = cursor.fetchall()
+        
+        assert len(users) > 0, "Нет пользователей в базе данных."
+        
+        cursor.close()
+        conn.close()
+        
+    except Exception as e:
+        pytest.fail(f"Ошибка при проверке пользователей в базе данных: {e}")
 
 if __name__ == "__main__":
     pytest.main()
