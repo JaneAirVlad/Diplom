@@ -55,9 +55,9 @@ def test_nginx_proxy():
 def test_users_in_database():
     try:
         conn = psycopg2.connect(
-            dbname='your_db_name',  # Замените на имя вашей базы данных
-            user='your_user',       # Замените на имя пользователя вашей базы данных
-            password='your_password',# Замените на пароль вашей базы данных
+            dbname='mydatabase',  # Замените на имя вашей базы данных
+            user='myuser',       # Замените на имя пользователя вашей базы данных
+            password='mypassword',# Замените на пароль вашей базы данных
             host='db'               # Замените на адрес вашего сервера базы данных (например, 'db' для Docker)
         )
         
