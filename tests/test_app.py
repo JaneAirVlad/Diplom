@@ -2,23 +2,6 @@ import subprocess
 import requests
 import pytest
 import time
-import psycopg2
-
-# Фикстура для подключения к базе данных
-@pytest.fixture(scope='module')
-def db_connection():
-    conn = None
-    try:
-        conn = psycopg2.connect(
-            dbname='mydatabase',  # Замените на имя вашей базы данных
-            user='myuser',       # Замените на имя пользователя вашей базы данных
-            password='mypassword',# Замените на пароль вашей базы данных
-            host='db'            # Замените на адрес вашего сервера базы данных (например, 'db' для Docker)
-        )
-        yield conn  # Возвращаем соединение для использования в тестах
-    finally:
-        if conn:
-            conn.close()  # Закрываем соединение после завершения тестов
 
 # Тест 1: Проверка корректности кода в main.py
 def test_main_code():
@@ -42,9 +25,16 @@ def test_docker_containers():
     except subprocess.CalledProcessError as e:
         pytest.fail(f"Ошибка при получении списка контейнеров: {e}")
 
-# Тест 3: Проверка доступности базы данных
-def test_database_connection(db_connection):
-    assert db_connection is not None, "Не удалось подключиться к базе данных."
+# Тест 3: Проверка доступности базы данных через docker-compose exec
+def test_database_connection():
+    try:
+        command = [
+            'docker-compose', 'exec', 'db', 'psql',
+            '-U', 'myuser', '-d', 'mydatabase', '-c', 'SELECT 1;'
+        ]
+        subprocess.run(command, check=True)
+    except subprocess.CalledProcessError as e:
+        pytest.fail(f"Не удалось подключиться к базе данных: {e}")
 
 # Тест 4: Проверка проксирования запросов через Nginx
 def test_nginx_proxy():
@@ -55,13 +45,24 @@ def test_nginx_proxy():
     except requests.ConnectionError:
         pytest.fail("Не удалось подключиться к серверу Nginx")
 
-# Тест 5: Проверка наличия пользователей в базе данных
-def test_users_in_database(db_connection):
-    with db_connection.cursor() as cursor:
-        cursor.execute('SELECT * FROM users')
-        users = cursor.fetchall()
+# Тест 5: Проверка наличия пользователей в базе данных через docker-compose exec
+def test_users_in_database():
+    try:
+        command = [
+            'docker-compose', 'exec', 'db', 'psql',
+            '-U', 'myuser', '-d', 'mydatabase', '-c', "SELECT * FROM users;"
+        ]
         
-        assert len(users) > 0, "Нет пользователей в базе данных."
+        result = subprocess.run(command, capture_output=True, text=True, check=True)
+        
+        # Проверяем вывод команды на наличие пользователей
+        output = result.stdout.strip().splitlines()
+        
+        if len(output) <= 2:  # Если вывод содержит только заголовки и пустую строку
+            pytest.fail("Таблица пользователей пуста.")
+    
+    except subprocess.CalledProcessError as e:
+        pytest.fail(f"Ошибка при выполнении команды psql: {e}")
 
 if __name__ == "__main__":
     pytest.main()
