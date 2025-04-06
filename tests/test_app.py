@@ -37,7 +37,7 @@ def test_database_connection():
             dbname='mydatabase',  # Замените на имя вашей базы данных
             user='myuser',       # Замените на имя пользователя вашей базы данных
             password='mypassword',# Замените на пароль вашей базы данных
-            host='db'               # Замените на адрес вашего сервера базы данных (например, 'db' для Docker)
+            host='172.18.0.3'               # Замените на адрес вашего сервера базы данных (например, 'db' для Docker)
         )
         conn.close()
     except Exception as e:
@@ -59,7 +59,7 @@ def test_users_in_database():
             dbname='mydatabase',  # Замените на имя вашей базы данных
             user='myuser',       # Замените на имя пользователя вашей базы данных
             password='mypassword',# Замените на пароль вашей базы данных
-            host='db'               # Замените на адрес вашего сервера базы данных (например, 'db' для Docker)
+            host='172.18.0.3'               # Замените на адрес вашего сервера базы данных (например, 'db' для Docker)
         )
         
         cursor = conn.cursor()
