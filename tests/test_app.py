@@ -31,6 +31,7 @@ def test_docker_containers():
 
 # Тест 3: Проверка доступности базы данных
 def test_database_connection():
+    time.sleep(5)
     try:
         conn = psycopg2.connect(
             dbname='mydatabase',  # Замените на имя вашей базы данных
