@@ -3,7 +3,6 @@ import requests
 import pytest
 import time
 import psycopg2
-from psycopg2 import sql
 
 # Фикстура для подключения к базе данных
 @pytest.fixture(scope='module')
@@ -23,16 +22,15 @@ def db_connection():
 
 # Тест 1: Проверка корректности кода в main.py
 def test_main_code():
+    process = subprocess.Popen(['python', 'app/main.py'])
+    time.sleep(5)  # Даем время приложению на запуск
+    
+    url = 'http://localhost:80'  # Замените на нужный URL, если необходимо
     try:
-        process = subprocess.Popen(['python', 'app/main.py'])
-        time.sleep(5)  # Даем время приложению на запуск
-        
-        url = 'http://localhost:80'  # Замените на нужный URL, если необходимо
         response = requests.get(url)
         assert response.status_code == 200, f"Страница не доступна. Код ответа: {response.status_code}"
-        
     except Exception as e:
-        pytest.fail(f"Не удалось запустить main.py или проверить страницу: {e}")
+        pytest.fail(f"Не удалось проверить страницу: {e}")
     finally:
         process.terminate()  # Завершаем процесс после теста
 
