@@ -27,22 +27,11 @@ services:
     image: nginx:latest
     volumes:
       - ./nginx/default.${ENV}.conf:/etc/nginx/conf.d/default.conf
-      - certbot-etc:/etc/letsencrypt
-      - certbot-var:/var/lib/letsencrypt
     ports:
       - "80:80"
       - "443:443"
     depends_on:
       - app
 
-  certbot:
-    image: certbot/certbot
-    volumes:
-      - certbot-etc:/etc/letsencrypt
-      - certbot-var:/var/lib/letsencrypt
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
-
 volumes:
   db_data:
-  certbot-etc:
-  certbot-var:
