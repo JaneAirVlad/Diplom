@@ -6,16 +6,20 @@ import time
 # Тест 1: Проверка корректности кода в main.py
 def test_main_code():
     process = subprocess.Popen(['python', 'app/main.py'])
-    time.sleep(5)  # Даем время приложению на запуск
     
+    # Ожидаем, пока приложение не станет доступным
     url = 'http://localhost:80'  # Замените на нужный URL, если необходимо
-    try:
-        response = requests.get(url)
-        assert response.status_code == 200, f"Страница не доступна. Код ответа: {response.status_code}"
-    except Exception as e:
-        pytest.fail(f"Не удалось проверить страницу: {e}")
-    finally:
-        process.terminate()  # Завершаем процесс после теста
+    for _ in range(10):  # Попробуем 10 раз
+        try:
+            response = requests.get(url)
+            assert response.status_code == 200, f"Страница не доступна. Код ответа: {response.status_code}"
+            break  # Если запрос успешен, выходим из цикла
+        except requests.ConnectionError:
+            time.sleep(1)  # Ждем секунду перед следующей попыткой
+    else:
+        pytest.fail("Приложение не запустилось вовремя.")
+    
+    process.terminate()  # Завершаем процесс после теста
 
 # Тест 2: Проверка, что все контейнеры запустились и работают
 def test_docker_containers():
@@ -29,7 +33,7 @@ def test_docker_containers():
 def test_database_connection():
     try:
         command = [
-            'docker-compose', 'exec', 'db', 'psql',
+            'docker-compose', 'exec', '-T', 'db', 'psql',
             '-U', 'myuser', '-d', 'mydatabase', '-c', 'SELECT 1;'
         ]
         subprocess.run(command, check=True)
@@ -49,7 +53,7 @@ def test_nginx_proxy():
 def test_users_in_database():
     try:
         command = [
-            'docker-compose', 'exec', 'db', 'psql',
+            'docker-compose', 'exec', '-T', 'db', 'psql',
             '-U', 'myuser', '-d', 'mydatabase', '-c', "SELECT * FROM users;"
         ]
         
