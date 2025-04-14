@@ -10,7 +10,7 @@ def init_db():
         dbname=os.environ['POSTGRES_DB'],
         user=os.environ['POSTGRES_USER'],
         password=os.environ['POSTGRES_PASSWORD'],
-        host='postgres'
+        host=os.getenv("DB_HOST", "localhost")
     )
     cursor = conn.cursor()
     cursor.execute('''
