@@ -1,5 +1,5 @@
 services:
-  db:
+  postgres:
     image: postgres:13
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
@@ -18,7 +18,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      DB_HOST: db
+      DB_HOST: postgres
     volumes:
       - ./input_data.txt:/app/input_data.txt
 
