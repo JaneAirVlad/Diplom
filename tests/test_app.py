@@ -33,7 +33,7 @@ def test_docker_containers():
 def test_database_connection():
     try:
         command = [
-            'docker-compose', 'exec', '-T', 'db', 'psql',
+            'docker-compose', 'exec', '-T', 'postgres', 'psql',
             '-U', 'myuser', '-d', 'mydatabase', '-c', 'SELECT 1;'
         ]
         subprocess.run(command, check=True)
@@ -53,7 +53,7 @@ def test_nginx_proxy():
 def test_users_in_database():
     try:
         command = [
-            'docker-compose', 'exec', '-T', 'db', 'psql',
+            'docker-compose', 'exec', '-T', 'postgres', 'psql',
             '-U', 'myuser', '-d', 'mydatabase', '-c', "SELECT * FROM users;"
         ]
         
