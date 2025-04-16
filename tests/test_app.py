@@ -1,10 +1,15 @@
+import os
+import time
 import requests
 import pytest
-import time
+from dotenv import load_dotenv
 
-SERVICE_URL = "http://35.205.72.135/"
+# Загружаем переменные из .env
+load_dotenv()
 
-# Тест 1: Проверка, что приложение запустилось и доступно
+SERVICE_URL = os.getenv("SERVICE_URL", "http://localhost")
+
+
 def test_app_is_reachable():
     for _ in range(10):
         try:
@@ -15,7 +20,7 @@ def test_app_is_reachable():
             time.sleep(1)
     pytest.fail("Приложение не запустилось вовремя или недоступно.")
 
-# Тест 2: Проверка, что API работает корректно (если есть endpoint)
+
 def test_api_health():
     try:
         response = requests.get(SERVICE_URL + "/health")
@@ -23,3 +28,18 @@ def test_api_health():
         assert response.json().get("status") == "ok"
     except Exception as e:
         pytest.fail(f"Ошибка при обращении к API /health: {e}")
+
+
+def test_api_users_endpoint():
+    try:
+        response = requests.get(SERVICE_URL + "/users")
+        assert response.status_code == 200
+        data = response.json()
+        assert isinstance(data, list)
+    except Exception as e:
+        pytest.fail(f"Ошибка при обращении к API /users: {e}")
+
+
+def test_invalid_route():
+    response = requests.get(SERVICE_URL + "/nonexistent")
+    assert response.status_code == 404, "Ожидался 404, но получен другой код"
