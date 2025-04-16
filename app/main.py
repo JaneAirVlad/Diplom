@@ -10,7 +10,7 @@ def init_db():
         dbname=os.environ['POSTGRES_DB'],
         user=os.environ['POSTGRES_USER'],
         password=os.environ['POSTGRES_PASSWORD'],
-        host=os.getenv("DB_HOST", "localhost")
+        host=os.getenv("DB_HOST", "postgres")
     )
     cursor = conn.cursor()
     cursor.execute('''
@@ -45,7 +45,7 @@ def load_data():
                 dbname=os.environ['POSTGRES_DB'],
                 user=os.environ['POSTGRES_USER'],
                 password=os.environ['POSTGRES_PASSWORD'],
-                host=os.getenv("DB_HOST", "localhost")
+                host=os.getenv("DB_HOST", "postgres")
             )
             cursor = conn.cursor()
             cursor.execute('INSERT INTO users (name, email, password_count) VALUES (%s, %s, %s)', (name, email, password_count))
@@ -63,7 +63,7 @@ def index():
         dbname=os.environ['POSTGRES_DB'],
         user=os.environ['POSTGRES_USER'],
         password=os.environ['POSTGRES_PASSWORD'],
-        host=os.getenv("DB_HOST", "localhost")
+        host=os.getenv("DB_HOST", "postgres")
     )
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM users')
