@@ -27,7 +27,7 @@ def init_db():
     conn.close()
 
 def load_data():
-    filepath = os.path.join(os.path.dirname(__file__), "..", "input_data.txt")
+    filepath = "input_data.txt"
     filepath = os.path.abspath(filepath)
 
     try:
