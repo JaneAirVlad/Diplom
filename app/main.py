@@ -1,7 +1,7 @@
 import os
 import psycopg2
-from flask import Flask, render_template_string
-from flask import jsonify
+import requests
+from flask import Flask, render_template_string, jsonify
 
 app = Flask(__name__)
 
@@ -14,15 +14,12 @@ def init_db():
     )
     cursor = conn.cursor()
     cursor.execute('''
-        DROP TABLE IF EXISTS users;
-    ''')
-    cursor.execute('''
-        CREATE TABLE users (
+        CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
             name VARCHAR(100),
             email VARCHAR(100),
             age INTEGER,
-            zodiac_sign VARCHAR(50)
+            zodiac_sign VARCHAR(100)
         )
     ''')
     conn.commit()
@@ -30,8 +27,11 @@ def init_db():
     conn.close()
 
 def load_data():
+    filepath = os.path.join(os.path.dirname(__file__), "..", "input_data.txt")
+    filepath = os.path.abspath(filepath)
+
     try:
-        with open("input_data.txt", "r") as f:
+        with open(filepath, "r") as f:
             lines = f.read().splitlines()
 
         if len(lines) >= 4:
@@ -47,17 +47,17 @@ def load_data():
                 host=os.getenv("DB_HOST", "postgres")
             )
             cursor = conn.cursor()
-            cursor.execute('''
-                INSERT INTO users (name, email, age, zodiac_sign)
-                VALUES (%s, %s, %s, %s)
-            ''', (name, email, age, zodiac_sign))
+            cursor.execute(
+                'INSERT INTO users (name, email, age, zodiac_sign) VALUES (%s, %s, %s, %s)',
+                (name, email, age, zodiac_sign)
+            )
             conn.commit()
             cursor.close()
             conn.close()
         else:
-            print("Ошибка: недостаточно строк в input_data.txt.")
+            print("Ошибка: недостаточно строк в файле input_data.txt")
     except Exception as e:
-        print(f"Ошибка при загрузке данных: {e}")
+        print(f"Ошибка при загрузке файла: {e}")
 
 @app.route('/')
 def index():
@@ -94,6 +94,29 @@ def index():
             {% endfor %}
         </table>
     ''', users=users)
+
+@app.route('/users')
+def get_users():
+    conn = psycopg2.connect(
+        dbname=os.environ['POSTGRES_DB'],
+        user=os.environ['POSTGRES_USER'],
+        password=os.environ['POSTGRES_PASSWORD'],
+        host=os.getenv("DB_HOST", "postgres")
+    )
+    cursor = conn.cursor()
+    cursor.execute('SELECT name, email, age, zodiac_sign FROM users')
+    users = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    return jsonify([
+        {
+            "name": user[0],
+            "email": user[1],
+            "age": user[2],
+            "zodiac_sign": user[3]
+        } for user in users
+    ])
 
 @app.route('/health')
 def health():
