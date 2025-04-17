@@ -1,7 +1,7 @@
 import os
 import psycopg2
 import requests
-from flask import Flask, render_template_string
+from flask import Flask, render_template_string, jsonify
 
 app = Flask(__name__)
 
@@ -26,16 +26,11 @@ def init_db():
     conn.close()
 
 def load_data():
-    # Прямая ссылка на файл input_data.txt в GitHub
     url = "https://raw.githubusercontent.com/JaneAirVlad/jenkins_3/main/input_data.txt"
-    
-    # Загрузка данных из файла
     response = requests.get(url)
-    
+
     if response.status_code == 200:
         lines = response.text.splitlines()
-        
-        # Проверяем, что файл содержит достаточное количество строк
         if len(lines) >= 9:
             name = lines[7].strip()
             email = lines[8].strip()
@@ -48,7 +43,10 @@ def load_data():
                 host=os.getenv("DB_HOST", "postgres")
             )
             cursor = conn.cursor()
-            cursor.execute('INSERT INTO users (name, email, password_count) VALUES (%s, %s, %s)', (name, email, password_count))
+            cursor.execute(
+                'INSERT INTO users (name, email, password_count) VALUES (%s, %s, %s)',
+                (name, email, password_count)
+            )
             conn.commit()
             cursor.close()
             conn.close()
@@ -95,7 +93,35 @@ def index():
 def health():
     return {"status": "ok"}, 200
 
+@app.route('/users')
+def users():
+    try:
+        conn = psycopg2.connect(
+            dbname=os.environ['POSTGRES_DB'],
+            user=os.environ['POSTGRES_USER'],
+            password=os.environ['POSTGRES_PASSWORD'],
+            host=os.getenv("DB_HOST", "postgres")
+        )
+        cursor = conn.cursor()
+        cursor.execute('SELECT id, name, email, password_count FROM users')
+        users = cursor.fetchall()
+        cursor.close()
+        conn.close()
+
+        users_json = [
+            {
+                "id": u[0],
+                "name": u[1],
+                "email": u[2],
+                "password_count": u[3]
+            } for u in users
+        ]
+        return jsonify(users_json), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == '__main__':
     init_db()
-    load_data()  
+    load_data()
     app.run(host='0.0.0.0', port=5000)
