@@ -27,37 +27,51 @@ def init_db():
     conn.close()
 
 def load_data():
-    filepath = "input_data.txt"
-    filepath = os.path.abspath(filepath)
+    file_path = "input_data.txt"
+    
+    if not os.path.exists(file_path):
+        print(f"[ERROR] Файл {file_path} не найден.")
+        return
+
+    with open(file_path, "r") as f:
+        lines = f.readlines()
+
+    if len(lines) < 4:
+        print("[ERROR] Недостаточно строк в input_data.txt")
+        return
+
+    name = lines[0].strip()
+    email = lines[1].strip()
+    age = int(lines[2].strip())
+    zodiac_sign = lines[3].strip()
 
     try:
-        with open(filepath, "r") as f:
-            lines = f.read().splitlines()
+        conn = psycopg2.connect(
+            dbname=os.environ['POSTGRES_DB'],
+            user=os.environ['POSTGRES_USER'],
+            password=os.environ['POSTGRES_PASSWORD'],
+            host=os.getenv("DB_HOST", "postgres")
+        )
+        cursor = conn.cursor()
 
-        if len(lines) >= 4:
-            name = lines[0].strip()
-            email = lines[1].strip()
-            age = int(lines[2].strip())
-            zodiac_sign = lines[3].strip()
+        # Проверка, есть ли пользователь с таким email
+        cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
+        existing_user = cursor.fetchone()
 
-            conn = psycopg2.connect(
-                dbname=os.environ['POSTGRES_DB'],
-                user=os.environ['POSTGRES_USER'],
-                password=os.environ['POSTGRES_PASSWORD'],
-                host=os.getenv("DB_HOST", "postgres")
-            )
-            cursor = conn.cursor()
+        if existing_user:
+            print(f"[INFO] Пользователь с email {email} уже существует, пропускаем.")
+        else:
             cursor.execute(
                 'INSERT INTO users (name, email, age, zodiac_sign) VALUES (%s, %s, %s, %s)',
                 (name, email, age, zodiac_sign)
             )
             conn.commit()
-            cursor.close()
-            conn.close()
-        else:
-            print("Ошибка: недостаточно строк в файле input_data.txt")
+            print(f"[INFO] Добавлен пользователь: {name} ({email})")
+
+        cursor.close()
+        conn.close()
     except Exception as e:
-        print(f"Ошибка при загрузке файла: {e}")
+        print(f"[ERROR] Ошибка при добавлении данных в БД: {e}")
 
 @app.route('/')
 def index():
