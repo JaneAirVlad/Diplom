@@ -21,8 +21,8 @@
 
 Доступы
 
-Приложение	https://tabletime.duckdns.org/ или https://35.205.72.135
-SonarQube	https://sonarqube.tabletime.duckdns.org/
-Prometheus	https://prometheus.tabletime.duckdns.org/
-Grafana	https://34.38.103.51
-Jenkins	http://34.135.37.98:8080
+- Приложение	https://tabletime.duckdns.org/ или https://35.205.72.135
+- SonarQube	https://sonarqube.tabletime.duckdns.org/
+- Prometheus	https://prometheus.tabletime.duckdns.org/
+- Grafana	https://34.38.103.51
+- Jenkins	http://34.135.37.98:8080
