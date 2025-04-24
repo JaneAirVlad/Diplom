@@ -19,7 +19,7 @@
 - **SonarQube** — анализ кода
 - **DuckDNS + Ingress + HTTPS** — внешний доступ
 
-Доступы
+### Доступы
 
 - Приложение	https://tabletime.duckdns.org/ или https://35.205.72.135
 - SonarQube	https://sonarqube.tabletime.duckdns.org/
